@@ -15,6 +15,6 @@ You can simply download our prebuilt releases from [https://github.com/jerrbeari
 ## Authors
 
 - [@jerrbearis2cool](https://www.github.com/jerrbearis2cool)
-- [@Flaryiest](https://www.github.com/Kevcore25)
+- [@Kevcore25](https://www.github.com/Kevcore25)
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
