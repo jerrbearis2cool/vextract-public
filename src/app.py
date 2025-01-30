@@ -221,7 +221,7 @@ class App:
             os.makedirs(video_directory)
 
         video_files = [f for f in os.listdir(video_directory) if f.endswith(".mp4")]
-
+        
         for video in video_files:
             video_path = os.path.join(video_directory, video)
 
@@ -242,7 +242,7 @@ class App:
     def get_video_thumbnail(self, video_path):
         try:
             thumbnail_path = "thumbnail.jpg"
-            command = f"ffmpeg -i {video_path} -ss 00:00:01 -vframes 1 {thumbnail_path} -y"
+            command = f'ffmpeg -i "{video_path}" -ss 00:00:01 -vframes 1 {thumbnail_path} -y'
             subprocess.run(command, shell=True, check=True)
 
             image = Image.open(thumbnail_path)
