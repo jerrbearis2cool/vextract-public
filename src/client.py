@@ -8,13 +8,13 @@ from src.api import API
 import shutil
 
 class Client:
-    def __init__(self, team, url):
+    def __init__(self, team, url, best_quality=False):
         self.url = url
         self.team = team
         self.app = None
-        self.video = f"{self.team}.mp4"
         self.id = API.get_id(team)
         self.event = ""
+        self.best_quality = best_quality
 
     def progress_hook(self, d):
         if d['status'] == 'downloading':
@@ -24,20 +24,43 @@ class Client:
 
     def download(self):
         zxt = self.url.strip()
-        options = {
-            'outtmpl': f"{self.team}.%(ext)s",
-            'format': 'bestaudio+bestevideo/best',
-            'merge_output_format': 'mp4',
-            'progress_hooks': [self.progress_hook],
-            'postprocessors': [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
-            }],
-            'postprocessor_args': [
-                '-ac', '2', 
-                '-ar', '44100'
-            ],
-        }
+
+        if self.best_quality:
+            options = {
+                'outtmpl': f"{self.event}.%(ext)s",  # Output file template
+                'format': 'bestvideo+bestaudio',     # Download best video and audio
+                'merge_output_format': 'mp4',        # Merge into MP4 format
+                'progress_hooks': [self.progress_hook],  # Add progress hook for monitoring
+                'postprocessors': [
+                    {
+                        'key': 'FFmpegMetadata',     # Add metadata (optional)
+                    },
+                    {
+                        'key': 'FFmpegEmbedSubtitle',  # Embed subtitles (optional)
+                    },
+                ],
+                'postprocessor_args': [
+                    '-ac', '2',  # Set audio channels to stereo
+                    '-ar', '44100',  # Set audio sample rate to 44.1 kHz
+                ],
+                'verbose': True,  # Enable verbose logging for debugging
+                'no_mtime': True,  # Do not modify file timestamps
+            }
+        else:
+            options = {
+                'outtmpl': f"{self.event}.%(ext)s",
+                'format': 'bestaudio+bestevideo/best',
+                'merge_output_format': 'mp4',
+                'progress_hooks': [self.progress_hook],
+                'postprocessors': [{
+                    'key': 'FFmpegVideoConvertor',
+                    'preferedformat': 'mp4',
+                }],
+                'postprocessor_args': [
+                    '-ac', '2', 
+                    '-ar', '44100'
+                ],
+            }
 
         if os.name == 'posix':
             options['cookiesfrombrowser'] = ('firefox', )
@@ -66,8 +89,8 @@ class Client:
     def delete(self):
         current_dir = os.getcwd()
         
-        folder_path = os.path.join(current_dir, self.team)
-        mp4_path = os.path.join(current_dir, f"{self.team}.mp4")
+        folder_path = os.path.join(current_dir, self.event)
+        mp4_path = os.path.join(current_dir, f"{self.event}.mp4")
 
         def force_delete(file_path):
             try:
@@ -81,21 +104,21 @@ class Client:
         if os.path.exists(folder_path):
             try:
                 shutil.rmtree(folder_path, onerror=lambda func, path, exc_info: force_delete(path))
-                print(f"Folder '{self.team}' and its contents have been deleted.")
+                print(f"Folder '{self.event}' and its contents have been deleted.")
             except Exception as e:
-                print(f"Failed to delete folder '{self.team}': {e}")
+                print(f"Failed to delete folder '{self.event}': {e}")
         else:
-            print(f"Folder '{self.team}' not found.")
+            print(f"Folder '{self.event}' not found.")
 
         if os.path.exists(mp4_path):
             try:
                 os.remove(mp4_path)
-                print(f"MP4 file '{self.team}.mp4' has been deleted.")
+                print(f"MP4 file '{self.event}.mp4' has been deleted.")
             except PermissionError:
-                print(f"MP4 file '{self.team}.mp4' is locked. Attempting forced deletion.")
+                print(f"MP4 file '{self.event}.mp4' is locked. Attempting forced deletion.")
                 force_delete(mp4_path)
         else:
-            print(f"MP4 file '{self.team}.mp4' not found.")
+            print(f"MP4 file '{self.event}.mp4' not found.")
     
     def get_matches(self, season, event):
         matches = API.get_matches(self.id, season, event)

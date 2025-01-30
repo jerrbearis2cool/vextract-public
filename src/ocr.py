@@ -13,13 +13,12 @@ class OCR:
     def __init__(self, client):
         from src.client import Client
         self.client = client
-        self.video = self.client.video
+        self.video = f"{self.client.event}.mp4"
 
         self.ocr = {}
-        print(self.client.team)
         try:
-            os.mkdir(self.client.team)
-            print(f"Directory '{self.client.team}' created successfully.")
+            os.mkdir(self.client.event)
+            print(f"Directory '{self.client.event}' created successfully.")
         except FileExistsError:
             pass
 
@@ -219,11 +218,11 @@ class OCR:
             high = time + i
             print(low, high)
             try:
-                os.mkdir(self.client.team)
-                print(f"Directory '{self.client.team}' created successfully.")
+                os.mkdir(self.client.event)
+                print(f"Directory '{self.client.event}' created successfully.")
             except FileExistsError:
                 pass
-            self.extract(low, high, f"{self.client.team}\\{item}.mp4")
+            self.extract(low, high, f"{self.client.event}\\{item}.mp4")
 
             return low, high
         except KeyError:

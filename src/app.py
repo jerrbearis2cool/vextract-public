@@ -21,17 +21,21 @@ class App:
         self.root = root
         self.precheck()
         self.seasons_data = API.get_seasons()
-        self.root.after(201, lambda :self.root.iconbitmap('assets\\icon.ico'))
+        self.root.after(201, lambda: self.root.iconbitmap('assets\\icon.ico'))
         self.root.title("Vextract")
         self.center_window(500, 300)
-    
+
         ctk.set_appearance_mode("dark")
 
-        self.root.grid_rowconfigure(0, weight=1)
-        self.root.grid_rowconfigure(4, weight=1)
-        self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_columnconfigure(2, weight=1)
+        self.root.grid_rowconfigure(0, weight=1)  # Row 4: No expansion
+        self.root.grid_rowconfigure(4, weight=1)  # Row 4: No expansion
+        self.root.grid_rowconfigure(5, weight=1)  # Row 4: No expansion
+
+        self.root.grid_columnconfigure(0, weight=1)  # Column 0: Expand
+        self.root.grid_columnconfigure(1, weight=1)  # Column 1: Expand
+        self.root.grid_columnconfigure(2, weight=1)  # Column 2: Expand
         self.root.grid_columnconfigure(3, weight=1)
+        
 
         self.team_plate = ctk.StringVar()
         self.selected_season = ctk.StringVar()
@@ -49,7 +53,10 @@ class App:
         ctk.CTkLabel(root, text="YouTube Link:").grid(row=3, column=1, padx=10, pady=10, sticky="ew")
         ctk.CTkEntry(root, textvariable=self.youtube_link).grid(row=3, column=2, padx=10, pady=10, sticky="ew")
 
-        ctk.CTkButton(root, text="Next", command=self.show_events, fg_color="#821D1A", hover_color="#bf0600").grid(row=4, column=1, columnspan=2, pady=10, sticky="ew")
+        self.best_quality_checkbox = ctk.CTkCheckBox(root, text="Best quality (WARNING: MAY BE 10 GB+)", fg_color="#bf0600", hover_color="#821D1A")
+        self.best_quality_checkbox.grid(row=4, column=1, columnspan=2, padx=10, pady=10, sticky="ew")
+
+        ctk.CTkButton(root, text="Next", command=self.show_events, fg_color="#821D1A", hover_color="#bf0600").grid(row=5, column=1, columnspan=2, pady=10, sticky="ew")
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
     
@@ -98,7 +105,7 @@ class App:
         if not CHECK.check_youtube(self.youtube_link.get()) or not self.youtube_link.get():
             messagebox.showerror("Error", "Invalid youtube URL")
             return
-        self.client = Client(self.team_plate.get(), self.youtube_link.get())
+        self.client = Client(self.team_plate.get(), self.youtube_link.get(), self.best_quality_checkbox.get())
         self.client.app = self
         if not self.team_plate.get() or not self.client.id:
             messagebox.showerror("Error", "Invalid team plate")
@@ -135,15 +142,19 @@ class App:
         if not self.event:
             messagebox.showerror("Error", "Invalid event")
             return
+        
         for i in range(0, len(self.events)):
             if self.event == self.events[i]["name"]:
                 self.event_id = self.events[i]["id"]
+
+        self.client.event = self.event
+        
         self.root.withdraw()
 
         self.loading_window = ctk.CTkToplevel(self.root)
         self.loading_window.protocol("WM_DELETE_WINDOW", self.on_close)
         self.loading_window.title("Vextracting...")
-        self.loading_window.after(201, lambda :self.root.iconbitmap('assets\\icon.ico'))
+        self.loading_window.after(201, lambda :self.loading_window.iconbitmap('assets\\icon.ico'))
         self.center_toplevel(self.loading_window, 300, 150)
 
         self.loading_window.grab_set()
@@ -198,14 +209,14 @@ class App:
         
         self.directory_window.title("Vextract - Results")
         self.directory_window.protocol("WM_DELETE_WINDOW", self.on_close)
-        self.directory_window.after(201, lambda :self.root.iconbitmap('assets\\icon.ico'))
+        self.directory_window.after(201, lambda :self.directory_window.iconbitmap('assets\\icon.ico'))
 
         self.center_toplevel(self.directory_window, 800, 600)
 
         self.directory_frame = ctk.CTkScrollableFrame(self.directory_window)
         self.directory_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        video_directory = self.client.team
+        video_directory = self.client.event
         if not os.path.exists(video_directory):
             os.makedirs(video_directory)
 
