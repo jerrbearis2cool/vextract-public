@@ -8,6 +8,11 @@ For more information, please join our discord server https://discord.gg/g7MQ8BeW
 
 You can simply download our prebuilt releases from [https://github.com/jerrbearis2cool/vextract-public/releases](https://github.com/jerrbearis2cool/vextract-public/releases), or you can run it from the source code. Simply run:
 ```bash
+  pip install -r requirements.txt
+
+```
+
+```bash
   python3 run.py
 ```
 
