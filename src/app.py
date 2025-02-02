@@ -19,7 +19,7 @@ class App:
         self.client = None  
         self.season = None
         self.root = root
-        self.precheck()
+        #self.precheck()
         self.seasons_data = API.get_seasons()
         self.root.after(201, lambda: self.root.iconbitmap('assets\\icon.ico'))
         self.root.title("Vextract")
@@ -86,6 +86,7 @@ class App:
 
     def on_close(self):
         self.root.destroy()
+        self.client.ocr.terminate()
         sys.exit()
 
     def center_window(self, width, height):

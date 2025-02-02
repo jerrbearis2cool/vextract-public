@@ -2,6 +2,7 @@ import yt_dlp
 import re
 import ctypes
 import os
+import sys
 from src.ocr import OCR
 from src.api import API
 
@@ -25,30 +26,32 @@ class Client:
     def download(self):
         zxt = self.url.strip()
 
+        base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+
         if self.best_quality:
             options = {
-                'outtmpl': f"{self.event}.%(ext)s",  # Output file template
-                'format': 'bestvideo+bestaudio',     # Download best video and audio
-                'merge_output_format': 'mp4',        # Merge into MP4 format
-                'progress_hooks': [self.progress_hook],  # Add progress hook for monitoring
+                'outtmpl': os.path.join(base_dir, f"{self.event}.%(ext)s"),
+                'format': 'bestvideo+bestaudio',
+                'merge_output_format': 'mp4',
+                'progress_hooks': [self.progress_hook],
                 'postprocessors': [
                     {
-                        'key': 'FFmpegMetadata',     # Add metadata (optional)
+                        'key': 'FFmpegMetadata',
                     },
                     {
-                        'key': 'FFmpegEmbedSubtitle',  # Embed subtitles (optional)
+                        'key': 'FFmpegEmbedSubtitle',
                     },
                 ],
                 'postprocessor_args': [
-                    '-ac', '2',  # Set audio channels to stereo
-                    '-ar', '44100',  # Set audio sample rate to 44.1 kHz
+                    '-ac', '2',
+                    '-ar', '44100',
                 ],
-                'verbose': True,  # Enable verbose logging for debugging
-                'no_mtime': True,  # Do not modify file timestamps
+                'verbose': True,
+                'no_mtime': True,
             }
         else:
             options = {
-                'outtmpl': f"{self.event}.%(ext)s",
+                'outtmpl': os.path.join(base_dir, f"{self.event}.%(ext)s"),
                 'format': 'bestaudio+bestevideo/best',
                 'merge_output_format': 'mp4',
                 'progress_hooks': [self.progress_hook],

@@ -7,13 +7,14 @@ import re
 import pytesseract
 import os
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = 'bin\\Tesseract-OCR\\tesseract.exe'
 
 class OCR:
     def __init__(self, client):
         from src.client import Client
         self.client = client
         self.video = f"{self.client.event}.mp4"
+        self.run = True
 
         self.ocr = {}
         try:
@@ -21,11 +22,14 @@ class OCR:
             print(f"Directory '{self.client.event}' created successfully.")
         except FileExistsError:
             pass
+    
+    def terminate(self):
+        self.run = False
 
     def video_duration(self):
 
         ffprobe_cmd = [
-            "ffprobe",
+            "bin\\ffprobe",
             "-v", "error",
             "-select_streams", "v:0",
             "-show_entries", "format=duration",
@@ -33,7 +37,7 @@ class OCR:
             self.video
         ]
         try:
-            result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+            result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
             duration = result.stdout.strip()
             if duration == "N/A" or not duration:
                 raise ValueError("Unable to retrieve video duration. Please check the file.")
@@ -53,6 +57,8 @@ class OCR:
         self.client.app.text = "Performing OCR"
 
         while current_time < duration:
+            if not self.run:
+                break
             self.client.app.progress_value = int((current_time / duration) * 100)
             print("Performing OCR...")
             text = self.single_ocr(current_time)
@@ -86,7 +92,7 @@ class OCR:
         crop_filter="crop=iw*0.25:ih*0.1:0:0"
 
         ffmpeg_cmd = [
-            "ffmpeg",
+            "bin\\ffmpeg",
             "-ss", str(timestamp),     
             "-i", self.video,       
             "-vf", crop_filter,   
@@ -98,7 +104,7 @@ class OCR:
         ]
 
         try:
-            process = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            process = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
             np_frame = np.frombuffer(process.stdout, np.uint8)
             frame = cv2.imdecode(np_frame, cv2.IMREAD_COLOR)
 
@@ -116,7 +122,7 @@ class OCR:
             raise ValueError("End time must be greater than start time.")
 
         ffmpeg_cmd = ffmpeg_cmd = [
-            "ffmpeg",
+            "bin\\ffmpeg",
             "-y",
             "-ss", str(start_time), 
             "-i", self.video, 
@@ -131,7 +137,7 @@ class OCR:
 
 
         try:
-            subprocess.run(ffmpeg_cmd, check=True)
+            subprocess.run(ffmpeg_cmd, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
             print(f"Video segment saved to {output_path}")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Error extracting video segment: {e.stderr.strip()}")
@@ -146,10 +152,11 @@ class OCR:
             return
 
         result = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "format=duration", "-of", "csv=p=0", input_file],
+            ["bin\\ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "format=duration", "-of", "csv=p=0", input_file],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         duration = float(result.stdout.strip())
 
@@ -164,7 +171,7 @@ class OCR:
                     temp_output_file = temp_file.name
 
                 ffmpeg_cmd = [
-                    "ffmpeg",
+                    "bin\\ffmpeg",
                     "-i", input_file,
                     "-c:v", "libx264",
                     "-b:v", f"{int(target_video_bitrate)}", 
@@ -174,7 +181,7 @@ class OCR:
                     temp_output_file
                 ]
 
-                subprocess.run(ffmpeg_cmd, check=True)
+                subprocess.run(ffmpeg_cmd, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
                 print(f"Compressed video saved to {temp_output_file}")
 
                 compressed_size = os.path.getsize(temp_output_file)
