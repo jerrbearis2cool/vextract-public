@@ -11,7 +11,17 @@ You can simply download our prebuilt releases from [https://github.com/jerrbeari
   python3 run.py
 ```
 
+Note: **Tkinter cannot be installed through pip**
 
+Linux
+```bash
+sudo apt update
+sudo apt install python3-tk
+```
+macOS
+```bash
+  brew install python-tk
+```
 ## Authors
 
 - [@jerrbearis2cool](https://www.github.com/jerrbearis2cool)
